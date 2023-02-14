@@ -5,7 +5,9 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [SerializeField] float _speed = 5;
+    [SerializeField] Camera _cam;
     Rigidbody _rb;
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -24,16 +26,16 @@ public class Player : MonoBehaviour
 
     void PlayerMove()
     {
-        float verticalSpd = _speed * Input.GetAxis("Vertical");
-        float horizontalSpd = _speed * Input.GetAxis("Horizontal");
-        Vector3 moveSpeed = new Vector3(verticalSpd, horizontalSpd, 0);
-        _rb.velocity = moveSpeed.normalized * _speed;
+
+        float verticalSpd = _speed * Input.GetAxisRaw("Vertical");
+        float horizontalSpd = _speed * Input.GetAxisRaw("Horizontal");
+        Vector3 camFoward = new Vector3(_cam.transform.forward.x, 0 , _cam.transform.forward.z).normalized;
+        Vector3 move = camFoward * verticalSpd + _cam.transform.right * horizontalSpd;
+        transform.position += move * Time.deltaTime;
     }
 
     void Flight()
     {
-        _rb.useGravity = false;
-        _rb.AddForce(transform.up * 3f, ForceMode.Impulse);
-        return;
+        _rb.AddForce(transform.up * 5f, ForceMode.Impulse);
     }
 }
