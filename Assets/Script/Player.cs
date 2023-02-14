@@ -15,12 +15,25 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        PlayerMove();
+        if (Input.GetKeyDown("space"))
+        {
+            Flight();
+        }
     }
 
     void PlayerMove()
     {
         float verticalSpd = _speed * Input.GetAxis("Vertical");
         float horizontalSpd = _speed * Input.GetAxis("Horizontal");
+        Vector3 moveSpeed = new Vector3(verticalSpd, horizontalSpd, 0);
+        _rb.velocity = moveSpeed.normalized * _speed;
+    }
+
+    void Flight()
+    {
+        _rb.useGravity = false;
+        _rb.AddForce(transform.up * 3f, ForceMode.Impulse);
+        return;
     }
 }
