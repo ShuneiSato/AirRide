@@ -6,8 +6,10 @@ public class Player : MonoBehaviour
 {
     [SerializeField] float _speed = 5;
     [SerializeField] Camera _cam;
+    [SerializeField] GameObject _player;
     Rigidbody _rb;
-    
+
+    public bool _isRide = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -17,10 +19,35 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        PlayerMove();
+        if(_isRide == false)
+        {
+            PlayerMove();
+        }
+        else if(_isRide == true)
+        {
+            this.transform.localPosition = new Vector3(0, 0.5f, 0);
+            this.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+            if(Input.GetKeyDown("space"))
+            {
+                Flight();
+                _player.transform.parent = null;
+                _isRide = false;
+            }
+        }
+        
         if (Input.GetKeyDown("space"))
         {
             Flight();
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.tag == "Machine")
+        {
+            this.transform.parent = collision.transform;
+            _isRide = true;
         }
     }
 
