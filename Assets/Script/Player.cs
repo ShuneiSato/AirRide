@@ -8,12 +8,14 @@ public class Player : MonoBehaviour
     [SerializeField] Camera _cam;
     [SerializeField] GameObject _player;
     Rigidbody _rb;
+    SphereCollider _col;
 
     public bool _isRide = false;
     // Start is called before the first frame update
     void Start()
     {
         _rb = GetComponent<Rigidbody>();
+        _col = GetComponent<SphereCollider>();
     }
 
     // Update is called once per frame
@@ -25,12 +27,14 @@ public class Player : MonoBehaviour
         }
         else if(_isRide == true)
         {
-            this.transform.localPosition = new Vector3(0, 0.5f, 0);
+            _col.enabled = false;
+            this.transform.localPosition = new Vector3(0, 0.7f, 0);
             this.transform.localRotation = Quaternion.Euler(0, 0, 0);
 
-            if(Input.GetKeyDown("space"))
+            if (Input.GetKeyDown("space"))
             {
                 Flight();
+                _col.enabled = true;
                 _player.transform.parent = null;
                 _isRide = false;
             }
