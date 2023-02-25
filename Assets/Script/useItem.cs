@@ -9,8 +9,33 @@ public class useItem : MonoBehaviour
     [SerializeField] ItemDataBase _dataBase;
     Sprite sprite;
 
+    [SerializeField] float _countGenerate = 0;
+    [SerializeField] float _generateTime = 10;
+    [SerializeField] int _maxGenerateItem  = 30;
+
     // Start is called before the first frame update
     void Start()
+    {
+        
+    }
+
+    private void Update()
+    {
+        GameObject[] itemObjects = GameObject.FindGameObjectsWithTag("Item");
+        _countGenerate += Time.fixedDeltaTime * 0.5f;
+        Debug.Log(itemObjects.Length);
+
+        if (_generateTime < _countGenerate)
+        {
+            if (_maxGenerateItem > itemObjects.Length)
+            {
+                GenerateItem();
+            }
+            _countGenerate = 0;
+        }
+    }
+
+    void GenerateItem()
     {
         int Rondomid = Random.Range(0, 18);
         int RandomX = Random.Range(-145, 110);

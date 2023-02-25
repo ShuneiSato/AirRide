@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Machine
   - MAST_Holder
+  - Item
   layers:
   - Default
   - TransparentFX
