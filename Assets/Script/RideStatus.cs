@@ -5,21 +5,21 @@ using UnityEngine;
 public class RideStatus : MonoBehaviour
 {
     // 増減されるステータス
-    [SerializeField, Range(1, 36)] int _acceleration = 18; // 加速
+    [SerializeField, Range(1, 36)] public int _acceleration = 18; // 加速
     int maxAcceleration = 36;
-    [SerializeField, Range(1, 36)] int _topSpeed = 18; // 最高速
+    [SerializeField, Range(1, 36)] public int _topSpeed = 18; // 最高速
     int maxTopSpeed = 36;
-    [SerializeField, Range(1, 36)] int _turning = 18; // 旋回
+    [SerializeField, Range(1, 36)] public int _turning = 18; // 旋回
     int maxTurning = 36;
-    [SerializeField, Range(1, 36)] int _charge = 18; // チャージ力
+    [SerializeField, Range(1, 36)] public int _charge = 18; // チャージ力
     int maxCharge = 36;
-    [SerializeField, Range(1, 36)] int _flight = 18; // 飛行
+    [SerializeField, Range(1, 36)] public int _flight = 18; // 飛行
     int maxFlight = 36;
-    [SerializeField, Range(1, 36)] int _attack = 18; // 攻撃力
+    [SerializeField, Range(1, 36)] public int _attack = 18; // 攻撃力
     int maxAttack = 36;
-    [SerializeField, Range(1, 36)] int _defense = 18; // 防御力
+    [SerializeField, Range(1, 36)] public int _defense = 18; // 防御力
     int maxDefense = 36;
-    [SerializeField, Range(1, 36)] int _weight = 18; // 重さ
+    [SerializeField, Range(1, 36)] public int _weight = 18; // 重さ
     int maxWeight = 36;
     [SerializeField, Range(1, 32)] int _health = 16; // 体力
     int maxHealth = 32;
@@ -44,52 +44,140 @@ public class RideStatus : MonoBehaviour
     public float _currentAtk;
     public float _currentDef;
     public float _currentWeight;
-    public float _currentHealth;
+    public int _currentHealth;
+
+    public int _currentHp;
+
+    [SerializeField] Ride _ride;
+    [SerializeField] GameObject _playerObj;
+    [SerializeField] HPBar _hPoint;
+    [SerializeField] GameObject _hpBar;
+    bool _rideSetUp = false;
+
+    private void Start()
+    {
+        _playerObj = GameObject.Find("Player");
+        _hpBar = GameObject.Find("Fill");
+    }
 
     private void Update()
     {
-        float highSpd = maxTopSpeed + _rideTopSpeed;
-        float nowSpd = _topSpeed + _rideTopSpeed;
-        float highFlight = maxFlight + _rideFlight;
-        float nowFlight = _flight + _rideFlight;
-        _currentAcc = Mathf.Pow(_acceleration / 1.22f, _rideAcceleration / 4f) / 2.5f;
-        if(_currentAcc > 100f)
+        if (_ride != null)
         {
-            _currentAcc = 100f;
+            if (_ride._isRide == true)
+            {
+                float highSpd = maxTopSpeed + _rideTopSpeed;
+                float nowSpd = _topSpeed + _rideTopSpeed;
+                float highFlight = maxFlight + _rideFlight;
+                float nowFlight = _flight + _rideFlight;
+                _currentAcc = Mathf.Pow(_acceleration / 1.22f, _rideAcceleration / 4f) / 2.5f;
+                if (_currentAcc > 100f)
+                {
+                    _currentAcc = 100f;
+                }
+                if (_acceleration > maxAcceleration)
+                    _acceleration = maxAcceleration;
+
+                _currentTopSpd = (nowSpd / highSpd) * 55.5f;
+                if (_topSpeed > maxTopSpeed)
+                    _topSpeed = maxTopSpeed;
+
+                _currentTurn = (_turning * 5) + _rideTurning;
+                if (_turning > maxTurning)
+                    _turning = maxTurning;
+
+                _currentCharge = (_charge * 10) * _rideCharge / 2;
+                if (_charge > maxCharge)
+                    _charge = maxCharge;
+
+                _currentFlight = (1 - (nowFlight / highFlight)) * -9.81f;
+                if (_flight > maxFlight)
+                    _flight = maxFlight;
+
+                _currentAtk = _attack + _rideAattack;
+                if (_attack > maxAttack)
+                    _attack = maxAttack;
+
+                _currentDef = (_defense + _rideDefense) * 2;
+                if (_defense > maxDefense)
+                    _defense = maxDefense;
+
+                _currentWeight = _weight * 2 + _rideWeight;
+                if (_weight > maxWeight)
+                    _weight = maxWeight;
+
+                _currentHealth = _health * 10 + _rideHealth;
+                if (_health > maxHealth)
+                    _health = maxHealth;
+
+                // HPBarに現在HPと最大HPを渡す
+                _hPoint.UpdateHpBar(this);
+            }
         }
-        if (_acceleration > maxAcceleration)
-            _acceleration = maxAcceleration;
+    }
 
-        _currentTopSpd = (nowSpd / highSpd) * 55.5f;
-        if (_topSpeed > maxTopSpeed)
-            _topSpeed = maxTopSpeed;
-        
-        _currentTurn = (_turning * 5) + _rideTurning;
-        if (_turning > maxTurning)
-            _turning = maxTurning;
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject == _playerObj)
+        {
+            _ride = GetComponent<Ride>();
+            _hPoint = _hpBar.GetComponent<HPBar>();
+            if (_rideSetUp == false)
+            {
+                _currentHealth = _health * 10 + _rideHealth;
+                _currentHp = _currentHealth;
+                _rideSetUp = true;
+            }
+        }
+    }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "Item")
+        {
+            var item = other.gameObject.GetComponent<InputItemData>();
+            var itemData = item._itemData;
+            var itemType = itemData.type;
+            var itemValue = itemData.efficacyValue;
 
-        _currentCharge = (_charge * 10) * _rideCharge / 2;
-        if (_charge > maxCharge)
-            _charge = maxCharge;
-        
-        _currentFlight = (1 - (nowFlight / highFlight)) * -9.81f;
-        if (_flight > maxFlight)
-            _flight = maxFlight;
-        
-        _currentAtk = _attack + _rideAattack;
-        if (_attack > maxAttack)
-            _attack = maxAttack;
+            if (itemType == Item.Type.Acceleration)
+            {
+                _acceleration += itemValue;
+            }
+            if (itemType == Item.Type.TopSpeed)
+            {
+                _topSpeed += itemValue;
+            }
+            if (itemType == Item.Type.Turning)
+            {
+                _turning += itemValue;
+            }
+            if (itemType == Item.Type.Charge)
+            {
+                _charge += itemValue;
+            }
+            if (itemType == Item.Type.Flight)
+            {
+                _flight += itemValue;
+            }
+            if (itemType == Item.Type.Attack)
+            {
+                _attack += itemValue;
+            }
+            if (itemType == Item.Type.Defense)
+            {
+                _defense += itemValue;
+            }
+            if (itemType == Item.Type.Weight)
+            {
+                _weight += itemValue;
+            }
+            if (itemType == Item.Type.health)
+            {
+                _health += itemValue;
+                _currentHp += itemValue * 10;
+            }
 
-        _currentDef = (_defense + _rideDefense) * 2;
-        if (_defense > maxDefense)
-            _defense = maxDefense;
-
-        _currentWeight = _weight * 2 + _rideWeight;
-        if (_weight > maxWeight)
-            _weight = maxWeight;
-
-        _currentHealth = _health * 10 + _rideHealth;
-        if (_health > maxHealth)
-            _health = maxHealth;
+            Destroy(other.gameObject);
+        }
     }
 }

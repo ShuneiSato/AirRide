@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TopSpeedDown
   m_EditorClassIdentifier: 
   id: 10
-  type: 10
+  type: 1
   infomation: 
   efficacyValue: -1
-  image: {fileID: 0}
+  image: {fileID: 21300000, guid: 6f4ee59d6e6ae0049a424d6996eff0d5, type: 3}

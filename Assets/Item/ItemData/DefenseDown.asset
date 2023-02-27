@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DefenseDown
   m_EditorClassIdentifier: 
   id: 15
-  type: 15
+  type: 6
   infomation: 
   efficacyValue: -1
-  image: {fileID: 0}
+  image: {fileID: 21300000, guid: 3ac882fb5ba875340b8e0d654b158834, type: 3}

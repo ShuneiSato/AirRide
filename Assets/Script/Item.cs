@@ -21,22 +21,12 @@ public class Item : ScriptableObject
         Weight,
         health,
 
-        AccelerationDown,
-        TopSpeedDown,
-        TurningDown,
-        ChargeDown,
-        FlightDown,
-        AttackDown,
-        DefenseDown,
-        WeightDown,
-        healthDown,
-
         Heal
     }
 
     public Type type; // アイテムの種類
     public String infomation; // アイテム説明
-    public float efficacyValue; // アイテムの効果量
+    public int efficacyValue; // アイテムの効果量
     public Sprite image; // アイテム画像
     /*
     public Item(Item item)

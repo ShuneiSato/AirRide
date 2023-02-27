@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HealthDown
   m_EditorClassIdentifier: 
   id: 17
-  type: 17
+  type: 8
   infomation: 
   efficacyValue: -1
-  image: {fileID: 0}
+  image: {fileID: 21300000, guid: 6aecb1f8cd3db27429055cc1288fc97d, type: 3}
