@@ -50,7 +50,8 @@ public class Player : MonoBehaviour
     {
         if(collision.gameObject.tag == "Machine")
         {
-            this.transform.parent = collision.transform;
+            var insertParent = collision.transform.GetChild(0).gameObject;
+            this.transform.parent = insertParent.transform;
             _isRide = true;
         }
     }

@@ -64,7 +64,7 @@ public class RideStatus : MonoBehaviour
     {
         if (_ride != null)
         {
-            if (_ride._isRide == true)
+            if (_ride._isRide == true || _ride._isCpuRide == true)
             {
                 float highSpd = maxTopSpeed + _rideTopSpeed;
                 float nowSpd = _topSpeed + _rideTopSpeed;
@@ -111,7 +111,13 @@ public class RideStatus : MonoBehaviour
                     _health = maxHealth;
 
                 // HPBarÇ…åªç›HPÇ∆ç≈ëÂHPÇìnÇ∑
-                _hPoint.UpdateHpBar(this);
+                if (_ride._isRide == true)
+                    _hPoint.UpdateHpBar(this);
+
+                if (_currentHp <= 0)
+                {
+                    _ride.Death();
+                }
             }
         }
     }
@@ -122,6 +128,16 @@ public class RideStatus : MonoBehaviour
         {
             _ride = GetComponent<Ride>();
             _hPoint = _hpBar.GetComponent<HPBar>();
+            if (_rideSetUp == false)
+            {
+                _currentHealth = _health * 10 + _rideHealth;
+                _currentHp = _currentHealth;
+                _rideSetUp = true;
+            }
+        }
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            _ride = GetComponent<Ride>();
             if (_rideSetUp == false)
             {
                 _currentHealth = _health * 10 + _rideHealth;

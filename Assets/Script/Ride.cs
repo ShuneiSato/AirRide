@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Ride : MonoBehaviour
 {
@@ -15,19 +16,28 @@ public class Ride : MonoBehaviour
     [SerializeField] SpeedMeter _sMeter;
     Vector3 rotation;
     Rigidbody _rb;
-    BoxCollider _col;
+    NavMeshAgent _agent;
+    Animator _anim;
     RideStatus _status;
+    Player _player;
+    AnimationEvent _animationEvent;
 
     public bool _isRide = false;
+    public bool _isCpuRide = false;
+    bool _getHit = false;
     // Start is called before the first frame update
     void Start()
     {
         _rb = GetComponent<Rigidbody>();
-        _col = GetComponent<BoxCollider>();
+        _agent = GetComponent<NavMeshAgent>();
+        _anim = GetComponentInChildren<Animator>();
         _status = GetComponent<RideStatus>();
+        _animationEvent = GetComponentInChildren<AnimationEvent>();
         _playerObj = GameObject.Find("Player");
         _meterObj = GameObject.Find("ChargeMeter_Fill");
         _speedObj = GameObject.Find("SpeedMeter");
+
+        _agent.enabled = false;
     }
 
     // Update is called once per frame
@@ -35,24 +45,30 @@ public class Ride : MonoBehaviour
     {
         Ray ray = new Ray(transform.position, Vector3.down);
         RaycastHit rayHit;
-        float range = 1.1f;
+        float range = 1.2f;
         int layerMask = LayerMask.GetMask(new string[] { "HitRayCast" });
-        Debug.DrawRay(ray.origin, ray.direction, Color.red);
+        //Debug.DrawRay(ray.origin, ray.direction, Color.red);
 
         // RayCastを下に射出、Hit時に挙動をオリジナル化
         if(Physics.Raycast(ray,out rayHit,range,layerMask))
         {
-            Debug.Log(rayHit.collider.gameObject.name + rayHit.normal);
+            //法線視認用Ray
+            Ray nomalRay = new Ray(rayHit.point, rayHit.normal);
+            Debug.DrawRay(nomalRay.origin, nomalRay.direction, Color.red);
 
             _rb.useGravity = false;
             // 法線ベクトルの取得、角度をベクトルと垂直に
             // localPosition.yを少し上に、浮遊させる
-            rotation = Quaternion.FromToRotation(transform.up, rayHit.normal).eulerAngles;
+            rotation = Vector3.Cross(rayHit.normal,Vector3.left);
+            Debug.DrawRay(ray.origin, rotation, Color.red);
             Vector3 p = rayHit.point;
             if (Input.GetKey(KeyCode.Mouse0))
             {
-                _rb.AddForce(_localGravity * Time.deltaTime, ForceMode.Impulse);
-                StopMove();
+                if (_isRide == true)
+                {
+                    _rb.AddForce(_localGravity * Time.deltaTime, ForceMode.Impulse);
+                    StopMove();
+                }
             }
             else
             {
@@ -71,7 +87,7 @@ public class Ride : MonoBehaviour
                 _flightGravity.y = _status._currentFlight;
                 AirMove();
                 _rb.AddForce(_flightGravity * Time.fixedDeltaTime, ForceMode.Impulse);
-                if (Input.GetKey(KeyCode.Mouse0))
+                if (Input.GetMouseButton(0))
                 {
                     _rb.AddForce(_localGravity * Time.fixedDeltaTime, ForceMode.Impulse);
                     StopMove();
@@ -84,6 +100,7 @@ public class Ride : MonoBehaviour
             _rb.velocity = new Vector3(_rb.velocity.x / 1.05f, _rb.velocity.y, _rb.velocity.z / 1.05f);
         }
         _currentSpeed = _rb.velocity.magnitude;
+        _anim.SetFloat("Speed", _currentSpeed);
         // UIへの情報伝達
         if (_meter != null)
         {
@@ -103,6 +120,14 @@ public class Ride : MonoBehaviour
                 _charge = 0;
             }
         }
+        if (Input.GetMouseButtonDown(1))
+        {
+            if (_isRide == true)
+            {
+                _animationEvent._col.enabled = true;
+                _anim.SetTrigger("Attack");
+            }
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -113,12 +138,35 @@ public class Ride : MonoBehaviour
             _meter = _meterObj.GetComponent<ChargeMeter>();
             _sMeter = _speedObj.GetComponent<SpeedMeter>();
         }
+        else if (collision.gameObject.CompareTag("Enemy"))
+        {
+            _isCpuRide = true;
+        }
     }
     private void OnCollisionExit(Collision collision)
     {
         if (collision.gameObject == _playerObj)
         {
+            _player = _playerObj.GetComponent<Player>();
             _isRide = false;
+        }
+        else if (collision.gameObject.CompareTag("Enemy"))
+        {
+            _isCpuRide = false;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("AttackPoint"))
+        {
+            Debug.Log("攻撃を受けた");
+            if (_getHit == false)
+            {
+                hit();
+                _animationEvent.EndAttack();
+                GetDamage(other.gameObject.GetComponentInParent<RideStatus>());
+            }
         }
     }
 
@@ -127,9 +175,9 @@ public class Ride : MonoBehaviour
     {
         float verticalSpd = _status._currentAcc * Input.GetAxisRaw("Vertical");
         float horizontalSpd = _status._currentTurn * Input.GetAxisRaw("Horizontal");
-        _rb.AddRelativeForce(Vector3.forward * verticalSpd);
+        _rb.AddRelativeForce(rotation * verticalSpd);
         transform.localPosition = yPosition;
-        transform.eulerAngles += new Vector3(0, horizontalSpd * Time.deltaTime , 0) + nVector;
+        transform.eulerAngles += new Vector3(0, horizontalSpd * Time.deltaTime , 0);
     }
     // 空中時の挙動
     void AirMove()
@@ -149,5 +197,28 @@ public class Ride : MonoBehaviour
             {
                 _charge = 100;
             }
+    }
+
+    public void GetDamage(RideStatus status)
+    {
+        _anim.SetTrigger("Damage");
+        int damage = (int)((status._currentAtk / 2) - (this._status._currentDef / 4));
+        if (damage <= 0)
+            damage = 1;
+        this._status._currentHp -= damage;
+    }
+    public void Death()
+    {
+        _anim.SetTrigger("Death");
+        _player._isRide = false;
+        _playerObj.transform.parent = null;
+    }
+
+    IEnumerator hit()
+    {
+        _getHit = true;
+        yield return new WaitForSeconds(3f);
+        if (_getHit)
+            _getHit = false;
     }
 }
