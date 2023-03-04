@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class Ride : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class Ride : MonoBehaviour
     [SerializeField] GameObject _playerObj;
     [SerializeField] GameObject _meterObj;
     [SerializeField] GameObject _speedObj;
+    [SerializeField] GameObject _breakCountObj;
+    [SerializeField] GameObject _AttackObj;
     [SerializeField] ChargeMeter _meter;
     [SerializeField] SpeedMeter _sMeter;
     Vector3 rotation;
@@ -19,14 +22,37 @@ public class Ride : MonoBehaviour
     NavMeshAgent _agent;
     Animator _anim;
     RideStatus _status;
+    BattleSpawn _battleSpawn;
     Player _player;
+    BreakCount _breakCount;
     AnimationEvent _animationEvent;
 
     public bool _isRide = false;
     public bool _isCpuRide = false;
     bool _getHit = false;
     // Start is called before the first frame update
-    void Start()
+    void Awake()
+    {
+        _rb = GetComponent<Rigidbody>();
+        _agent = GetComponent<NavMeshAgent>();
+        _anim = GetComponentInChildren<Animator>();
+        _status = GetComponent<RideStatus>();
+        _animationEvent = GetComponentInChildren<AnimationEvent>();
+        _playerObj = GameObject.Find("Player");
+        _meterObj = GameObject.Find("ChargeMeter_Fill");
+        _speedObj = GameObject.Find("SpeedMeter");
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
+        if (SceneManager.GetActiveScene().name == "PlayScene[Battle]")
+        {
+            _battleSpawn = GetComponent<BattleSpawn>();
+            _breakCountObj = GameObject.Find("BreakCount");
+            _breakCount = _breakCountObj.GetComponent<BreakCount>();
+        }
+
+        _agent.enabled = false;
+    }
+    void OnEnable()
     {
         _rb = GetComponent<Rigidbody>();
         _agent = GetComponent<NavMeshAgent>();
@@ -37,7 +63,22 @@ public class Ride : MonoBehaviour
         _meterObj = GameObject.Find("ChargeMeter_Fill");
         _speedObj = GameObject.Find("SpeedMeter");
 
+        if (SceneManager.GetActiveScene().name == "PlayScene[Battle]")
+        {
+            _battleSpawn = GetComponent<BattleSpawn>();
+            _breakCountObj = GameObject.Find("BreakCount");
+            _breakCount = _breakCountObj.GetComponent<BreakCount>();
+        }
+        if (SceneManager.GetActiveScene().name == "Result")
+            Destroy(this.gameObject);
+
         _agent.enabled = false;
+    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
+    {
+        StartCoroutine("Wait");
+
+        this.gameObject.SetActive(true);
     }
 
     // Update is called once per frame
@@ -57,7 +98,7 @@ public class Ride : MonoBehaviour
             Debug.DrawRay(nomalRay.origin, nomalRay.direction, Color.red);
 
             _rb.useGravity = false;
-            // 法線ベクトルの取得、角度をベクトルと垂直に
+            // 法線ベクトルの取得、ベクトルと垂直に
             // localPosition.yを少し上に、浮遊させる
             rotation = Vector3.Cross(rayHit.normal,Vector3.left);
             Debug.DrawRay(ray.origin, rotation, Color.red);
@@ -128,6 +169,14 @@ public class Ride : MonoBehaviour
                 _anim.SetTrigger("Attack");
             }
         }
+        if (Input.GetKeyDown("space"))
+        {
+            if(_isRide == true)
+            {
+                if (SceneManager.GetActiveScene().name == "PlayScene[Tryal]")
+                    _isRide = false;
+            }
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -147,7 +196,6 @@ public class Ride : MonoBehaviour
     {
         if (collision.gameObject == _playerObj)
         {
-            _player = _playerObj.GetComponent<Player>();
             _isRide = false;
         }
         else if (collision.gameObject.CompareTag("Enemy"))
@@ -166,6 +214,9 @@ public class Ride : MonoBehaviour
                 hit();
                 _animationEvent.EndAttack();
                 GetDamage(other.gameObject.GetComponentInParent<RideStatus>());
+                var child = other.transform.GetChild(1).gameObject;
+                if (child != null)
+                    _AttackObj = child;
             }
         }
     }
@@ -202,7 +253,7 @@ public class Ride : MonoBehaviour
     public void GetDamage(RideStatus status)
     {
         _anim.SetTrigger("Damage");
-        int damage = (int)((status._currentAtk / 2) - (this._status._currentDef / 4));
+        int damage = (int)((status._currentAtk * 2) - (this._status._currentDef / 4));
         if (damage <= 0)
             damage = 1;
         this._status._currentHp -= damage;
@@ -210,8 +261,17 @@ public class Ride : MonoBehaviour
     public void Death()
     {
         _anim.SetTrigger("Death");
-        _player._isRide = false;
-        _playerObj.transform.parent = null;
+        if (SceneManager.GetActiveScene().name == "PlayScene[Tryal]")
+        {
+            _player._isRide = false;
+            _playerObj.transform.parent = null;
+            StartCoroutine("DeathMotion");
+        }
+        if (SceneManager.GetActiveScene().name == "PlayScene[Battle]")
+        {
+            _battleSpawn.ResetMachine(this.gameObject);
+            StartCoroutine("ResetMotion");
+        }
     }
 
     IEnumerator hit()
@@ -220,5 +280,25 @@ public class Ride : MonoBehaviour
         yield return new WaitForSeconds(3f);
         if (_getHit)
             _getHit = false;
+    }
+    IEnumerator DeathMotion()
+    {
+        yield return new WaitForSeconds(1.9f);
+
+        Destroy(this.gameObject);
+    }
+    IEnumerator ResetMotion()
+    {
+        if (_AttackObj != null)
+            _breakCount.Defeat(_AttackObj);
+        yield return new WaitForSeconds(2.2f);
+
+        _status._currentHp = _status._currentHealth;
+        _anim.Play("RideStop", 0, 0);
+    }
+    IEnumerator Wait()
+    {
+        this.gameObject.SetActive(false);
+        yield return new WaitForSeconds(0.1f);
     }
 }

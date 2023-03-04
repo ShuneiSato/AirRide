@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class EnemyMove : MonoBehaviour
 {
@@ -9,18 +10,38 @@ public class EnemyMove : MonoBehaviour
     private NavMeshAgent _childAgent;
     private RideStatus _status;
     private SphereCollider _col;
+    private Rigidbody _rb;
     private GameObject closeTarget;
     private GameObject[] targets;
     private float searchTime = 0;
 
     bool _isRide;
-    void Start()
+    bool _isRepelled;
+    void Awake()
     {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
         _agent = GetComponent<NavMeshAgent>();
         _col = GetComponent<SphereCollider>();
+        _rb = GetComponent<Rigidbody>();
         _agent.destination = this.transform.position;
         _agent.avoidancePriority = Random.Range(0, 100);
         _isRide = false;
+        _isRepelled = false;
+    }
+    private void OnEnable()
+    {
+        _agent = GetComponent<NavMeshAgent>();
+        _col = GetComponent<SphereCollider>();
+        _rb = GetComponent<Rigidbody>();
+        _agent.destination = this.transform.position;
+        _agent.avoidancePriority = Random.Range(0, 100);
+        _isRide = false;
+        _isRepelled = false;
+    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
+    {
+        
     }
 
     private void Update()
@@ -59,6 +80,20 @@ public class EnemyMove : MonoBehaviour
             _childAgent.acceleration = _status._currentAcc / 25f;
             RandomWander();
         }
+
+        if (_status != null)
+        {
+            if (_status._currentHp <= 0)
+            {
+                if (SceneManager.GetActiveScene().name == "PlayScene[Tryal]")
+                {
+                    _isRide = false;
+                    this.transform.parent = null;
+                    _col.enabled = true;
+                    _agent.enabled = true;
+                }
+            }
+        }
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -71,6 +106,7 @@ public class EnemyMove : MonoBehaviour
             _agent.enabled = false;
             _childAgent.enabled = true;
             _isRide = true;
+            _isRepelled = false;
         }
     }
     void RandomWander()
@@ -85,7 +121,6 @@ public class EnemyMove : MonoBehaviour
                     if (!_childAgent.hasPath || _childAgent.velocity.sqrMagnitude == 0f)
                     {
                         _childAgent.destination = GetRandomLocation();
-                        Debug.Log(GetRandomLocation());
                     }
                 }
             }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -9,11 +10,13 @@ public class Player : MonoBehaviour
     [SerializeField] GameObject _player;
     Rigidbody _rb;
     SphereCollider _col;
+    Scene _nowScene;
 
     public bool _isRide = false;
     // Start is called before the first frame update
     void Start()
     {
+        _cam = Camera.main;
         _rb = GetComponent<Rigidbody>();
         _col = GetComponent<SphereCollider>();
     }
@@ -25,7 +28,7 @@ public class Player : MonoBehaviour
         {
             PlayerMove();
         }
-        else if(_isRide == true)
+        if(_isRide == true)
         {
             _col.enabled = false;
             this.transform.localPosition = new Vector3(0, 0.7f, 0);
@@ -33,10 +36,8 @@ public class Player : MonoBehaviour
 
             if (Input.GetKeyDown("space"))
             {
-                Flight();
-                _col.enabled = true;
-                _player.transform.parent = null;
-                _isRide = false;
+                if (SceneManager.GetActiveScene().name == "PlayScene[Tryal]")
+                    StartCoroutine("secession");
             }
         }
         
@@ -56,7 +57,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    void PlayerMove()
+    public void PlayerMove()
     {
 
         float verticalSpd = _speed * Input.GetAxisRaw("Vertical");
@@ -68,6 +69,17 @@ public class Player : MonoBehaviour
 
     void Flight()
     {
-        _rb.AddForce(transform.up * 5f, ForceMode.Impulse);
+        _rb.AddForce(transform.up * 8f, ForceMode.Impulse);
+    }
+
+    IEnumerator secession()
+    {
+        Debug.Log("’Ê‚Á‚½");
+        _player.transform.parent = null;
+        Flight();
+        _isRide = false;
+
+        yield return new WaitForSeconds(0.7f);
+        _col.enabled = true;
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class RideStatus : MonoBehaviour
 {
@@ -53,11 +54,27 @@ public class RideStatus : MonoBehaviour
     [SerializeField] HPBar _hPoint;
     [SerializeField] GameObject _hpBar;
     bool _rideSetUp = false;
+    bool _isDead;
 
-    private void Start()
+    private void Awake()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
+        _playerObj = GameObject.Find("Player");
+        _hpBar = GameObject.Find("Fill");
+
+        _isDead = false;
+    }
+    void OnEnable()
     {
         _playerObj = GameObject.Find("Player");
         _hpBar = GameObject.Find("Fill");
+
+        _isDead = false;
+    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
+    {
+
     }
 
     private void Update()
@@ -114,8 +131,9 @@ public class RideStatus : MonoBehaviour
                 if (_ride._isRide == true)
                     _hPoint.UpdateHpBar(this);
 
-                if (_currentHp <= 0)
+                if (_currentHp <= 0 && _isDead == false)
                 {
+                    _isDead = true;
                     _ride.Death();
                 }
             }
