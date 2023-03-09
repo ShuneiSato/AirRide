@@ -53,13 +53,12 @@ public class RideStatus : MonoBehaviour
     [SerializeField] GameObject _playerObj;
     [SerializeField] HPBar _hPoint;
     [SerializeField] GameObject _hpBar;
+    [SerializeField] AudioClip _getSE;
     bool _rideSetUp = false;
     bool _isDead;
 
     private void Awake()
     {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-
         _playerObj = GameObject.Find("Player");
         _hpBar = GameObject.Find("Fill");
 
@@ -71,10 +70,6 @@ public class RideStatus : MonoBehaviour
         _hpBar = GameObject.Find("Fill");
 
         _isDead = false;
-    }
-    private void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
-    {
-
     }
 
     private void Update()
@@ -168,6 +163,7 @@ public class RideStatus : MonoBehaviour
     {
         if (other.gameObject.tag == "Item")
         {
+            GameManager.instance.PlaySE(_getSE);
             var item = other.gameObject.GetComponent<InputItemData>();
             var itemData = item._itemData;
             var itemType = itemData.type;

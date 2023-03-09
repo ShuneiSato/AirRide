@@ -51,6 +51,7 @@ public class SceneTransition : MonoBehaviour
 
     IEnumerator LoadScenePlayCoroutine()
     {
+        yield return new WaitForSeconds(3f);
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("PlayScene[Tryal]");
 
         if (!asyncLoad.isDone)
@@ -99,6 +100,7 @@ public class SceneTransition : MonoBehaviour
 
     IEnumerator LoadSceneTitleCoroutine()
     {
+        yield return new WaitForSeconds(3f);
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Title");
 
         if (!asyncLoad.isDone)

@@ -31,9 +31,6 @@ public class EnemyMove : MonoBehaviour
     }
     private void OnEnable()
     {
-        _agent = GetComponent<NavMeshAgent>();
-        _col = GetComponent<SphereCollider>();
-        _rb = GetComponent<Rigidbody>();
         _agent.destination = this.transform.position;
         _agent.avoidancePriority = Random.Range(0, 100);
         _isRide = false;
@@ -55,8 +52,6 @@ public class EnemyMove : MonoBehaviour
             float closeDist = 100;
             foreach (GameObject t in targets)
             {
-                Debug.Log(Vector3.Distance(transform.position, t.transform.position));
-
                 float tDist = Vector3.Distance(transform.position, t.transform.position);
 
                 if (closeDist > tDist)

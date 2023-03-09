@@ -17,6 +17,8 @@ public class Ride : MonoBehaviour
     [SerializeField] GameObject _AttackObj;
     [SerializeField] ChargeMeter _meter;
     [SerializeField] SpeedMeter _sMeter;
+    [SerializeField] AudioClip _rideSE;
+    [SerializeField] AudioClip _attackSE;
     Vector3 rotation;
     Rigidbody _rb;
     NavMeshAgent _agent;
@@ -43,40 +45,31 @@ public class Ride : MonoBehaviour
         _speedObj = GameObject.Find("SpeedMeter");
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        if (SceneManager.GetActiveScene().name == "PlayScene[Battle]")
-        {
-            _battleSpawn = GetComponent<BattleSpawn>();
-            _breakCountObj = GameObject.Find("BreakCount");
-            _breakCount = _breakCountObj.GetComponent<BreakCount>();
-        }
+        _battleSpawn = GetComponent<BattleSpawn>();
+        _breakCountObj = GameObject.Find("BreakCount");
+        _breakCount = _breakCountObj.GetComponent<BreakCount>();
 
         _agent.enabled = false;
     }
     void OnEnable()
     {
-        _rb = GetComponent<Rigidbody>();
-        _agent = GetComponent<NavMeshAgent>();
-        _anim = GetComponentInChildren<Animator>();
-        _status = GetComponent<RideStatus>();
-        _animationEvent = GetComponentInChildren<AnimationEvent>();
         _playerObj = GameObject.Find("Player");
         _meterObj = GameObject.Find("ChargeMeter_Fill");
         _speedObj = GameObject.Find("SpeedMeter");
 
-        if (SceneManager.GetActiveScene().name == "PlayScene[Battle]")
-        {
-            _battleSpawn = GetComponent<BattleSpawn>();
-            _breakCountObj = GameObject.Find("BreakCount");
-            _breakCount = _breakCountObj.GetComponent<BreakCount>();
-        }
-        if (SceneManager.GetActiveScene().name == "Result")
-            Destroy(this.gameObject);
+        _battleSpawn = GetComponent<BattleSpawn>();
+        _breakCountObj = GameObject.Find("BreakCount");
+        _breakCount = _breakCountObj.GetComponent<BreakCount>();
 
         _agent.enabled = false;
     }
     private void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
     {
+        Debug.Log(scene.name);
         StartCoroutine("Wait");
+            
+        if (SceneManager.GetActiveScene().name == "PlayScene[Battle]")
+            SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
 
         this.gameObject.SetActive(true);
     }
@@ -183,6 +176,7 @@ public class Ride : MonoBehaviour
     {
         if (collision.gameObject == _playerObj)
         {
+            GameManager.instance.PlaySE(_rideSE);
             _isRide = true;
             _meter = _meterObj.GetComponent<ChargeMeter>();
             _sMeter = _speedObj.GetComponent<SpeedMeter>();
@@ -211,7 +205,8 @@ public class Ride : MonoBehaviour
             Debug.Log("çUåÇÇéÛÇØÇΩ");
             if (_getHit == false)
             {
-                hit();
+                StartCoroutine("hit");
+                GameManager.instance.PlaySE(_attackSE);
                 _animationEvent.EndAttack();
                 GetDamage(other.gameObject.GetComponentInParent<RideStatus>());
                 var child = other.transform.GetChild(1).gameObject;
@@ -283,6 +278,8 @@ public class Ride : MonoBehaviour
     }
     IEnumerator DeathMotion()
     {
+        if (_AttackObj != null)
+            _breakCount.Defeat(_AttackObj);
         yield return new WaitForSeconds(1.9f);
 
         Destroy(this.gameObject);

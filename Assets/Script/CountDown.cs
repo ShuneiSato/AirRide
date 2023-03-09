@@ -14,13 +14,19 @@ public class CountDown : MonoBehaviour
     private bool _sceneLoaded;
 
     GameObject _sceneTransObj;
+    GameObject _fadeObj;
     [SerializeField] SceneTransition _sceneTrans;
+    [SerializeField] Fade _fade;
     [SerializeField] Image _finishImage;
+    [SerializeField] AudioClip _finishSE;
 
     private void Start()
     {
         timeText = GetComponent<TextMeshProUGUI>();
         _sceneTransObj = GameObject.Find("SceneTransition");
+        _fadeObj = GameObject.Find("Fade");
+        if (_fadeObj != null)
+            _fade = _fadeObj.GetComponent<Fade>();
         if (_sceneTransObj != null)
             _sceneTrans = _sceneTransObj.GetComponent<SceneTransition>();
 
@@ -40,14 +46,17 @@ public class CountDown : MonoBehaviour
             // 0ïbÇ…Ç»Ç¡ÇΩÇ∆Ç´ÇÃèàóù
             timeText.enabled = false;
             _finishImage.enabled = true;
+            GameManager.instance.PlaySE(_finishSE);
             if (SceneManager.GetActiveScene().name == "PlayScene[Tryal]" && _sceneLoaded == false)
             {
                 _sceneLoaded = true;
-                _sceneTrans.LoadSceneBattle();
+                _fade.FadeOutStart();
+                _sceneTrans.LoadSceneResult();
             }
             if (SceneManager.GetActiveScene().name == "PlayScene[Battle]" && _sceneLoaded == false)
             {
                 _sceneLoaded = true;
+                _fade.FadeOutStart();
                 _sceneTrans.LoadSceneResult();
             }
         }

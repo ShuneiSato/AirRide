@@ -20,7 +20,7 @@ public class BreakCount : MonoBehaviour
     {
         DontDestroyOnLoad(gameObject);
 
-        if (SceneManager.GetActiveScene().name == "PlayScene[Battle]")
+        if (SceneManager.GetActiveScene().name == "PlayScene[Tryal]")
         {
             playerCount = 0;
             enemyCount = 0;

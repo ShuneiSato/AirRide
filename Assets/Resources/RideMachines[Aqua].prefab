@@ -138,8 +138,12 @@ MonoBehaviour:
   _playerObj: {fileID: 0}
   _meterObj: {fileID: 0}
   _speedObj: {fileID: 0}
+  _breakCountObj: {fileID: 0}
+  _AttackObj: {fileID: 0}
   _meter: {fileID: 0}
   _sMeter: {fileID: 0}
+  _rideSE: {fileID: 8300000, guid: f3583447e04e37c4c960e7f34ce3a2e2, type: 3}
+  _attackSE: {fileID: 8300000, guid: 76af675289307ff45bdbb2b44e158846, type: 3}
   _isRide: 0
   _isCpuRide: 0
 --- !u!114 &6535402991406437907
@@ -186,6 +190,7 @@ MonoBehaviour:
   _playerObj: {fileID: 0}
   _hPoint: {fileID: 0}
   _hpBar: {fileID: 0}
+  _getSE: {fileID: 8300000, guid: 09266bfca82600f47998c73748942e84, type: 3}
 --- !u!54 &6535402991406437933
 Rigidbody:
   m_ObjectHideFlags: 0
